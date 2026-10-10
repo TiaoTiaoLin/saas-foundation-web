@@ -1,0 +1,39 @@
+export type TokenResponse = {
+  accessToken: string
+  tokenType: string
+  expiresAt: string
+  refreshToken: string
+  refreshTokenExpiresAt: string
+  tenantId: string
+}
+
+export type RegisterTenantResponse = {
+  tenantId: string
+  organizationName: string
+  adminEmail: string
+  welcomeEmailAccepted: boolean
+  welcomeEmailDetail?: string
+}
+
+export type Product = {
+  id: string
+  tenantId: string
+  name: string
+  sku: string
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export type FieldViolation = {
+  field: string
+  message: string
+}
+
+export type ApiErrorBody = {
+  status?: number
+  error?: string
+  message?: string
+  path?: string
+  violations?: FieldViolation[]
+}
