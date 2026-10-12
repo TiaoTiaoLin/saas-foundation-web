@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api, errorMessage, violation } from '../api/http'
 import type { Product } from '../api/types'
+import { useSession } from '../auth/AuthProvider'
+import { canManageProducts } from '../auth/session'
 import { TextField } from '../components/TextField'
 import { requiredText } from '../validation'
 
@@ -13,6 +15,8 @@ type HomeState = {
 
 export function ProductsPage() {
   const location = useLocation()
+  const session = useSession()
+  const canManage = session ? canManageProducts(session.accessToken) : false
   const arrival = (location.state ?? null) as HomeState | null
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
@@ -77,7 +81,11 @@ export function ProductsPage() {
       <header className="page-head">
         <div>
           <h1>Products</h1>
-          <p>Active products for this tenant. Turning a product off removes it from this list.</p>
+          <p>
+            {canManage
+              ? 'Active products for this tenant. Turning a product off removes it from this list.'
+              : 'Active products for this tenant. You can view them.'}
+          </p>
         </div>
       </header>
 
@@ -88,32 +96,34 @@ export function ProductsPage() {
         </div>
       ) : null}
 
-      <form className="create-card" onSubmit={(event) => void onCreate(event)} noValidate>
-        <h2>New product</h2>
-        {createError ? <p className="banner error" role="alert">{createError}</p> : null}
-        <div className="create-grid">
-          <TextField
-            label="Name"
-            name="name"
-            value={name}
-            onChange={setName}
-            error={createErrors.name || undefined}
-            maxLength={128}
-          />
-          <TextField
-            label="SKU"
-            name="sku"
-            value={sku}
-            onChange={setSku}
-            error={createErrors.sku || undefined}
-            maxLength={64}
-            spellCheck={false}
-          />
-          <button type="submit" className="button" disabled={creating}>
-            {creating ? 'Adding…' : 'Add product'}
-          </button>
-        </div>
-      </form>
+      {canManage ? (
+        <form className="create-card" onSubmit={(event) => void onCreate(event)} noValidate>
+          <h2>New product</h2>
+          {createError ? <p className="banner error" role="alert">{createError}</p> : null}
+          <div className="create-grid">
+            <TextField
+              label="Name"
+              name="name"
+              value={name}
+              onChange={setName}
+              error={createErrors.name || undefined}
+              maxLength={128}
+            />
+            <TextField
+              label="SKU"
+              name="sku"
+              value={sku}
+              onChange={setSku}
+              error={createErrors.sku || undefined}
+              maxLength={64}
+              spellCheck={false}
+            />
+            <button type="submit" className="button" disabled={creating}>
+              {creating ? 'Adding…' : 'Add product'}
+            </button>
+          </div>
+        </form>
+      ) : null}
 
       {loading ? <p className="muted">Loading products…</p> : null}
       {loadError ? <p className="banner error" role="alert">{loadError}</p> : null}
@@ -121,7 +131,11 @@ export function ProductsPage() {
       {!loading && !loadError && products.length === 0 ? (
         <div className="empty">
           <h2>No active products</h2>
-          <p>Add one with a name and a SKU that is unique inside this tenant.</p>
+          <p>
+            {canManage
+              ? 'Add one with a name and a SKU that is unique inside this tenant.'
+              : 'An owner or admin can add products for this tenant.'}
+          </p>
         </div>
       ) : null}
 
@@ -133,7 +147,7 @@ export function ProductsPage() {
                 <th scope="col">Name</th>
                 <th scope="col">SKU</th>
                 <th scope="col">Updated</th>
-                <th scope="col"><span className="sr-only">Actions</span></th>
+                {canManage ? <th scope="col"><span className="sr-only">Actions</span></th> : null}
               </tr>
             </thead>
             <tbody>
@@ -142,11 +156,13 @@ export function ProductsPage() {
                   <th scope="row">{product.name}</th>
                   <td className="sku">{product.sku}</td>
                   <td>{formatWhen(product.updatedAt)}</td>
-                  <td className="row-action">
-                    <button type="button" className="button secondary" onClick={() => setEditing(product)}>
-                      Edit
-                    </button>
-                  </td>
+                  {canManage ? (
+                    <td className="row-action">
+                      <button type="button" className="button secondary" onClick={() => setEditing(product)}>
+                        Edit
+                      </button>
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
@@ -154,7 +170,7 @@ export function ProductsPage() {
         </div>
       ) : null}
 
-      {editing ? (
+      {canManage && editing ? (
         <EditProductDialog
           product={editing}
           onClose={() => setEditing(null)}

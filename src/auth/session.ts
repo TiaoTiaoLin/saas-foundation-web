@@ -62,3 +62,11 @@ export function readAccessClaims(token: string): AccessClaims | null {
     return null
   }
 }
+
+const PRODUCT_MANAGER_ROLES = new Set(['OWNER', 'ADMIN'])
+
+/** Matches POST, PUT, and DELETE on /api/v1/products, which require OWNER or ADMIN. */
+export function canManageProducts(accessToken: string): boolean {
+  const roles = readAccessClaims(accessToken)?.roles ?? []
+  return roles.some((role) => PRODUCT_MANAGER_ROLES.has(role))
+}
