@@ -63,10 +63,27 @@ export function readAccessClaims(token: string): AccessClaims | null {
   }
 }
 
-const PRODUCT_MANAGER_ROLES = new Set(['OWNER', 'ADMIN'])
+function rolesOf(accessToken: string): string[] {
+  return readAccessClaims(accessToken)?.roles ?? []
+}
+
+const MANAGER_ROLES = new Set(['OWNER', 'ADMIN'])
 
 /** Matches POST, PUT, and DELETE on /api/v1/products, which require OWNER or ADMIN. */
 export function canManageProducts(accessToken: string): boolean {
-  const roles = readAccessClaims(accessToken)?.roles ?? []
-  return roles.some((role) => PRODUCT_MANAGER_ROLES.has(role))
+  return rolesOf(accessToken).some((role) => MANAGER_ROLES.has(role))
+}
+
+/** GET /api/v1/members is limited to OWNER and ADMIN. */
+export function canViewMembers(accessToken: string): boolean {
+  return rolesOf(accessToken).some((role) => MANAGER_ROLES.has(role))
+}
+
+/** Invite, role change, and removal require OWNER. */
+export function isOwner(accessToken: string): boolean {
+  return rolesOf(accessToken).includes('OWNER')
+}
+
+export function currentUserId(accessToken: string): string | null {
+  return readAccessClaims(accessToken)?.sub ?? null
 }

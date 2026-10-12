@@ -1,10 +1,10 @@
-import { useState, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api } from '../api/http'
 import { useSession } from '../auth/AuthProvider'
-import { readAccessClaims, setSession } from '../auth/session'
+import { canViewMembers, readAccessClaims, setSession } from '../auth/session'
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell() {
   const session = useSession()
   const navigate = useNavigate()
   const [copied, setCopied] = useState(false)
@@ -14,6 +14,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const claims = readAccessClaims(session.accessToken)
   const role = claims?.roles?.[0] ?? 'Member'
+  const showMembers = canViewMembers(session.accessToken)
 
   async function copyTenant() {
     try {
@@ -53,6 +54,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
       </header>
+      <nav className="nav" aria-label="Sections">
+        <NavLink to="/" end>Products</NavLink>
+        {showMembers ? <NavLink to="/members">Members</NavLink> : null}
+      </nav>
       <div className="tenant-strip">
         <span>Tenant</span>
         <code>{session.tenantId}</code>
@@ -60,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <main className="content">{children}</main>
+      <main className="content"><Outlet /></main>
     </div>
   )
 }

@@ -15,6 +15,22 @@ export type RegisterTenantResponse = {
   welcomeEmailDetail?: string
 }
 
+export type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER'
+
+export type Member = {
+  userId: string
+  email: string
+  role: MembershipRole
+}
+
+export type InviteMemberResponse = {
+  userId: string
+  email: string
+  role: MembershipRole
+  emailAccepted: boolean
+  emailDetail?: string
+}
+
 export type Product = {
   id: string
   tenantId: string

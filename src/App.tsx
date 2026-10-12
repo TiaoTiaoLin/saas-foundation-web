@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AuthProvider, useSession } from './auth/AuthProvider'
 import { AppShell } from './components/AppShell'
 import { LoginPage } from './pages/LoginPage'
+import { MembersPage } from './pages/MembersPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { SignupPage } from './pages/SignupPage'
 
@@ -25,15 +26,15 @@ export function App() {
         <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
         <Route path="/signup" element={<GuestOnly><SignupPage /></GuestOnly>} />
         <Route
-          path="/"
           element={(
             <RequireAuth>
-              <AppShell>
-                <ProductsPage />
-              </AppShell>
+              <AppShell />
             </RequireAuth>
           )}
-        />
+        >
+          <Route path="/" element={<ProductsPage />} />
+          <Route path="/members" element={<MembersPage />} />
+        </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>

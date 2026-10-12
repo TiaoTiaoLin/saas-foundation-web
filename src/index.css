@@ -154,7 +154,7 @@ h1, h2, p { margin: 0; }
 
 .field label { font-weight: 600; font-size: 0.92rem; }
 
-.field input {
+.field input, .field select {
   width: 100%;
   border: 1px solid var(--line);
   background: var(--paper-2);
@@ -232,6 +232,26 @@ h1, h2, p { margin: 0; }
   border-color: rgba(246, 243, 236, 0.35);
 }
 
+.nav {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.45rem 1.5rem;
+  background: var(--forest-2);
+}
+
+.nav a {
+  color: rgba(246, 243, 236, 0.78);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+}
+
+.nav a.active {
+  color: #f6f3ec;
+  background: rgba(246, 243, 236, 0.14);
+}
+
 .tenant-strip {
   justify-content: flex-start;
   background: #efe7d8;
@@ -272,6 +292,8 @@ h1, h2, p { margin: 0; }
   margin-bottom: 0.8rem;
 }
 
+.create-card .hint { margin: -0.35rem 0 0.85rem; }
+
 .create-grid {
   display: grid;
   grid-template-columns: 1fr minmax(140px, 200px) auto;
@@ -296,7 +318,17 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 
 .sku, .sku-line span { font-family: var(--mono); font-size: 0.92rem; }
 
-.row-action { text-align: right; width: 1%; }
+.row-action { text-align: right; width: 1%; white-space: nowrap; }
+
+.row-action .button + .button { margin-left: 0.45rem; }
+
+.inline-select {
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  border-radius: 10px;
+  padding: 0.4rem 0.55rem;
+  font: inherit;
+}
 
 .empty p { color: var(--muted); }
 
@@ -348,5 +380,5 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
   .auth-panel h1 { max-width: none; }
   .create-grid { grid-template-columns: 1fr; }
   .who .email { display: none; }
-  .content, .topbar, .tenant-strip { padding-left: 1rem; padding-right: 1rem; }
+  .content, .topbar, .tenant-strip, .nav { padding-left: 1rem; padding-right: 1rem; }
 }
