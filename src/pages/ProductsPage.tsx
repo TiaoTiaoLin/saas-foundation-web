@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api, errorMessage, violation } from '../api/http'
 import type { Product } from '../api/types'
@@ -28,22 +28,36 @@ export function ProductsPage() {
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<Product | null>(null)
   const [notice, setNotice] = useState<string | null>(() => arrivalNotice(arrival))
+  const [query, setQuery] = useState('')
+  const loadGeneration = useRef(0)
 
-  async function load() {
+  async function load(rawQuery: string) {
+    const generation = ++loadGeneration.current
+    const trimmed = rawQuery.trim()
     try {
-      const list = await api<Product[]>('/api/v1/products')
+      const path = trimmed
+        ? `/api/v1/products/search?q=${encodeURIComponent(trimmed)}`
+        : '/api/v1/products'
+      const list = await api<Product[]>(path)
+      if (generation !== loadGeneration.current) return
       setProducts(list)
       setLoadError(null)
     } catch (error) {
+      if (generation !== loadGeneration.current) return
       setLoadError(errorMessage(error))
     } finally {
-      setLoading(false)
+      if (generation === loadGeneration.current) setLoading(false)
     }
   }
 
   useEffect(() => {
-    void load()
-  }, [])
+    setLoading(true)
+    const delay = query.trim() ? 300 : 0
+    const handle = window.setTimeout(() => {
+      void load(query)
+    }, delay)
+    return () => window.clearTimeout(handle)
+  }, [query])
 
   async function onCreate(event: FormEvent) {
     event.preventDefault()
@@ -64,7 +78,7 @@ export function ProductsPage() {
       })
       setName('')
       setSku('')
-      await load()
+      await load(query)
     } catch (error) {
       setCreateErrors({
         name: violation(error, 'name') ?? '',
@@ -125,17 +139,47 @@ export function ProductsPage() {
         </form>
       ) : null}
 
+      <form
+        className="search-row"
+        role="search"
+        onSubmit={(event) => {
+          event.preventDefault()
+          void load(query)
+        }}
+      >
+        <TextField
+          label="Search"
+          name="product-search"
+          value={query}
+          onChange={setQuery}
+          maxLength={128}
+          spellCheck={false}
+          hint={canManage
+            ? 'Name or SKU. Inactive products are included.'
+            : 'Name or SKU.'}
+        />
+      </form>
+
       {loading ? <p className="muted">Loading products…</p> : null}
       {loadError ? <p className="banner error" role="alert">{loadError}</p> : null}
 
       {!loading && !loadError && products.length === 0 ? (
         <div className="empty">
-          <h2>{canManage ? 'No products' : 'No active products'}</h2>
-          <p>
-            {canManage
-              ? 'Add one with a name and a SKU that is unique inside this tenant.'
-              : 'An owner or admin can add products for this tenant.'}
-          </p>
+          {query.trim() ? (
+            <>
+              <h2>No matching products</h2>
+              <p>Nothing in this tenant has that name or SKU.</p>
+            </>
+          ) : (
+            <>
+              <h2>{canManage ? 'No products' : 'No active products'}</h2>
+              <p>
+                {canManage
+                  ? 'Add one with a name and a SKU that is unique inside this tenant.'
+                  : 'An owner or admin can add products for this tenant.'}
+              </p>
+            </>
+          )}
         </div>
       ) : null}
 
@@ -178,7 +222,7 @@ export function ProductsPage() {
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null)
-            void load()
+            void load(query)
           }}
         />
       ) : null}

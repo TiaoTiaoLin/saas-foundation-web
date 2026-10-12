@@ -294,6 +294,8 @@ h1, h2, p { margin: 0; }
 
 .create-card .hint { margin: -0.35rem 0 0.85rem; }
 
+.search-row { max-width: 28rem; }
+
 .create-grid {
   display: grid;
   grid-template-columns: 1fr minmax(140px, 200px) auto;
