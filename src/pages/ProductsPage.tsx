@@ -83,7 +83,7 @@ export function ProductsPage() {
           <h1>Products</h1>
           <p>
             {canManage
-              ? 'Active products for this tenant. Turning a product off removes it from this list.'
+              ? 'All products for this tenant, including ones that are turned off. Members only see active products.'
               : 'Active products for this tenant. You can view them.'}
           </p>
         </div>
@@ -130,7 +130,7 @@ export function ProductsPage() {
 
       {!loading && !loadError && products.length === 0 ? (
         <div className="empty">
-          <h2>No active products</h2>
+          <h2>{canManage ? 'No products' : 'No active products'}</h2>
           <p>
             {canManage
               ? 'Add one with a name and a SKU that is unique inside this tenant.'
@@ -147,6 +147,7 @@ export function ProductsPage() {
                 <th scope="col">Name</th>
                 <th scope="col">SKU</th>
                 <th scope="col">Updated</th>
+                {canManage ? <th scope="col">Status</th> : null}
                 {canManage ? <th scope="col"><span className="sr-only">Actions</span></th> : null}
               </tr>
             </thead>
@@ -156,6 +157,7 @@ export function ProductsPage() {
                   <th scope="row">{product.name}</th>
                   <td className="sku">{product.sku}</td>
                   <td>{formatWhen(product.updatedAt)}</td>
+                  {canManage ? <td>{product.active ? 'Active' : 'Inactive'}</td> : null}
                   {canManage ? (
                     <td className="row-action">
                       <button type="button" className="button secondary" onClick={() => setEditing(product)}>
@@ -282,7 +284,7 @@ function EditProductDialog({
               checked={active}
               onChange={(event) => setActive(event.target.checked)}
             />
-            <span>Active. Inactive products are left out of this list.</span>
+            <span>Active. Members only see products that stay checked.</span>
           </label>
           <div className="modal-actions">
             <button type="submit" className="button" disabled={pending}>
