@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useLocation } from 'react-router-dom'
 import { api, errorMessage, violation } from '../api/http'
-import type { Product } from '../api/types'
+import type { Product, ProductPage } from '../api/types'
 import { useSession } from '../auth/AuthProvider'
 import { canManageProducts } from '../auth/session'
 import { TextField } from '../components/TextField'
 import { requiredText } from '../validation'
+
+const DEFAULT_PAGE_SIZE = 20
+const MAX_PAGE_SIZE = 100
 
 type HomeState = {
   organizationName?: string
@@ -19,6 +22,11 @@ export function ProductsPage() {
   const canManage = session ? canManageProducts(session.accessToken) : false
   const arrival = (location.state ?? null) as HomeState | null
   const [products, setProducts] = useState<Product[]>([])
+  const [page, setPage] = useState(0)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [pageDraft, setPageDraft] = useState('1')
+  const [sizeDraft, setSizeDraft] = useState(String(DEFAULT_PAGE_SIZE))
+  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [name, setName] = useState('')
@@ -31,16 +39,30 @@ export function ProductsPage() {
   const [query, setQuery] = useState('')
   const loadGeneration = useRef(0)
 
-  async function load(rawQuery: string) {
+  async function load(rawQuery: string, pageIndex: number, size = pageSize) {
     const generation = ++loadGeneration.current
+    setLoading(true)
     const trimmed = rawQuery.trim()
+    const params = new URLSearchParams({
+      page: String(Math.max(pageIndex, 0)),
+      size: String(clampPageSize(size)),
+    })
+    if (trimmed) params.set('q', trimmed)
+    const path = `${trimmed ? '/api/v1/products/search' : '/api/v1/products'}?${params}`
     try {
-      const path = trimmed
-        ? `/api/v1/products/search?q=${encodeURIComponent(trimmed)}`
-        : '/api/v1/products'
-      const list = await api<Product[]>(path)
+      const result = await api<ProductPage>(path)
       if (generation !== loadGeneration.current) return
-      setProducts(list)
+      const lastPage = result.size > 0 ? Math.max(0, Math.ceil(result.total / result.size) - 1) : 0
+      if (result.items.length === 0 && result.page > lastPage) {
+        void load(rawQuery, lastPage)
+        return
+      }
+      setProducts(result.items)
+      setPage(result.page)
+      setPageDraft(String(result.page + 1))
+      setPageSize(result.size)
+      setSizeDraft(String(result.size))
+      setTotal(result.total)
       setLoadError(null)
     } catch (error) {
       if (generation !== loadGeneration.current) return
@@ -54,7 +76,7 @@ export function ProductsPage() {
     setLoading(true)
     const delay = query.trim() ? 300 : 0
     const handle = window.setTimeout(() => {
-      void load(query)
+      void load(query, 0)
     }, delay)
     return () => window.clearTimeout(handle)
   }, [query])
@@ -78,7 +100,7 @@ export function ProductsPage() {
       })
       setName('')
       setSku('')
-      await load(query)
+      await load(query, 0)
     } catch (error) {
       setCreateErrors({
         name: violation(error, 'name') ?? '',
@@ -88,6 +110,26 @@ export function ProductsPage() {
     } finally {
       setCreating(false)
     }
+  }
+
+  const pageCount = pageSize > 0 ? Math.ceil(total / pageSize) : 0
+  const lastPageNumber = Math.max(pageCount, 1)
+  const rangeStart = total === 0 ? 0 : page * pageSize + 1
+  const rangeEnd = Math.min(total, page * pageSize + products.length)
+
+  function goToPage(event: FormEvent) {
+    event.preventDefault()
+    const requested = Number(pageDraft)
+    if (!Number.isInteger(requested)) return
+    const clamped = Math.min(Math.max(requested, 1), lastPageNumber)
+    setPageDraft(String(clamped))
+    void load(query, clamped - 1)
+  }
+
+  function applyPageSize() {
+    const next = clampPageSize(Number(sizeDraft))
+    setSizeDraft(String(next))
+    if (next !== pageSize) void load(query, 0, next)
   }
 
   return (
@@ -144,7 +186,7 @@ export function ProductsPage() {
         role="search"
         onSubmit={(event) => {
           event.preventDefault()
-          void load(query)
+          void load(query, 0)
         }}
       >
         <TextField
@@ -216,18 +258,90 @@ export function ProductsPage() {
         </div>
       ) : null}
 
+      {!loadError && (!loading || total > 0) ? (
+        <nav className="pager" aria-label="Products">
+          <button
+            type="button"
+            className="button secondary"
+            disabled={page === 0 || loading || total === 0}
+            onClick={() => void load(query, page - 1)}
+          >
+            Previous
+          </button>
+          <form onSubmit={goToPage}>
+            <label htmlFor="product-page">Page</label>
+            <input
+              id="product-page"
+              name="page"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={lastPageNumber}
+              value={pageDraft}
+              disabled={loading || total === 0}
+              onChange={(event) => setPageDraft(event.target.value)}
+            />
+            <span>of {lastPageNumber}</span>
+            <button type="submit" className="button secondary" disabled={loading || total === 0}>
+              Go
+            </button>
+          </form>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              applyPageSize()
+            }}
+          >
+            <label htmlFor="product-page-size">Rows</label>
+            <input
+              id="product-page-size"
+              name="size"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={MAX_PAGE_SIZE}
+              value={sizeDraft}
+              disabled={loading}
+              onChange={(event) => setSizeDraft(event.target.value)}
+              onBlur={applyPageSize}
+            />
+          </form>
+          <p>
+            {rangeStart}–{rangeEnd} of {total}
+          </p>
+          <button
+            type="button"
+            className="button secondary"
+            disabled={page + 1 >= pageCount || loading || total === 0}
+            onClick={() => void load(query, page + 1)}
+          >
+            Next
+          </button>
+        </nav>
+      ) : null}
+
       {canManage && editing ? (
         <EditProductDialog
           product={editing}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null)
-            void load(query)
+            void load(query, page)
+          }}
+          onDeleted={() => {
+            setEditing(null)
+            const nextPage = products.length === 1 && page > 0 ? page - 1 : page
+            void load(query, nextPage)
           }}
         />
       ) : null}
     </section>
   )
+}
+
+function clampPageSize(size: number): number {
+  if (!Number.isInteger(size) || size < 1) return DEFAULT_PAGE_SIZE
+  return Math.min(size, MAX_PAGE_SIZE)
 }
 
 function arrivalNotice(state: HomeState | null): string | null {
@@ -248,10 +362,12 @@ function EditProductDialog({
   product,
   onClose,
   onSaved,
+  onDeleted,
 }: {
   product: Product
   onClose: () => void
   onSaved: () => void
+  onDeleted: () => void
 }) {
   const [name, setName] = useState(product.name)
   const [active, setActive] = useState(product.active)
@@ -294,7 +410,7 @@ function EditProductDialog({
     setFormError(null)
     try {
       await api<void>(`/api/v1/products/${product.id}`, { method: 'DELETE' })
-      onSaved()
+      onDeleted()
     } catch (error) {
       setFormError(errorMessage(error))
       setPending(false)

@@ -41,6 +41,13 @@ export type Product = {
   updatedAt: string
 }
 
+export type ProductPage = {
+  items: Product[]
+  page: number
+  size: number
+  total: number
+}
+
 export type FieldViolation = {
   field: string
   message: string

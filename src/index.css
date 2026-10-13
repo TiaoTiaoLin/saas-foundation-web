@@ -296,6 +296,31 @@ h1, h2, p { margin: 0; }
 
 .search-row { max-width: 28rem; }
 
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.pager form {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pager label { font-weight: 600; font-size: 0.92rem; }
+
+.pager input[type="number"] {
+  width: 4.5rem;
+  border: 1px solid var(--line);
+  background: var(--paper-2);
+  border-radius: 10px;
+  padding: 0.4rem 0.55rem;
+}
+
+.pager p, .pager span { color: var(--muted); }
+
 .create-grid {
   display: grid;
   grid-template-columns: 1fr minmax(140px, 200px) auto;
