@@ -57,6 +57,7 @@ export function AppShell() {
       <nav className="nav" aria-label="Sections">
         <NavLink to="/" end>Products</NavLink>
         {showMembers ? <NavLink to="/members">Members</NavLink> : null}
+        <NavLink to="/password">Password</NavLink>
       </nav>
       <div className="tenant-strip">
         <span>Tenant</span>

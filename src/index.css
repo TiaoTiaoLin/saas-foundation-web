@@ -285,6 +285,8 @@ h1, h2, p { margin: 0; }
 
 .create-card, .empty { padding: 1.1rem 1.15rem 1.2rem; }
 
+.password-card { max-width: 28rem; display: grid; gap: 0.9rem; }
+
 .create-card h2, .empty h2 {
   font-family: var(--serif);
   font-size: 1.45rem;
