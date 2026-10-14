@@ -12,8 +12,6 @@ const MAX_PAGE_SIZE = 100
 
 type HomeState = {
   organizationName?: string
-  welcomeEmailAccepted?: boolean
-  welcomeEmailDetail?: string
 }
 
 export function ProductsPage() {
@@ -346,9 +344,6 @@ function clampPageSize(size: number): number {
 
 function arrivalNotice(state: HomeState | null): string | null {
   if (!state?.organizationName) return null
-  if (state.welcomeEmailAccepted === false && state.welcomeEmailDetail) {
-    return `${state.organizationName} is ready. The welcome email was not sent: ${state.welcomeEmailDetail}`
-  }
   return `${state.organizationName} is ready. You are signed in as the owner.`
 }
 

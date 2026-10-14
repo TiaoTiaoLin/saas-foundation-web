@@ -60,8 +60,6 @@ export function SignupPage() {
         replace: true,
         state: {
           organizationName: registered.organizationName,
-          welcomeEmailAccepted: registered.welcomeEmailAccepted,
-          welcomeEmailDetail: registered.welcomeEmailDetail,
         },
       })
     } catch (error) {

@@ -11,8 +11,6 @@ export type RegisterTenantResponse = {
   tenantId: string
   organizationName: string
   adminEmail: string
-  welcomeEmailAccepted: boolean
-  welcomeEmailDetail?: string
 }
 
 export type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER'
