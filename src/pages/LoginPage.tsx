@@ -119,6 +119,9 @@ export function LoginPage() {
           {pending ? 'Signing in…' : 'Sign in'}
         </button>
         <p className="switch">
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
+        <p className="switch">
           New organization? <Link to="/signup">Create one</Link>
         </p>
       </form>
