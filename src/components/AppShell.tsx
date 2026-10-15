@@ -58,6 +58,7 @@ export function AppShell() {
         <NavLink to="/" end>Products</NavLink>
         {showMembers ? <NavLink to="/members">Members</NavLink> : null}
         <NavLink to="/password">Password</NavLink>
+        <NavLink to="/account">Account</NavLink>
       </nav>
       <div className="tenant-strip">
         <span>Tenant</span>

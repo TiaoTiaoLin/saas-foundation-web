@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { AuthProvider, useSession } from './auth/AuthProvider'
 import { AppShell } from './components/AppShell'
+import { AccountPage } from './pages/AccountPage'
 import { LoginPage } from './pages/LoginPage'
 import { MembersPage } from './pages/MembersPage'
 import { PasswordPage } from './pages/PasswordPage'
@@ -36,6 +37,7 @@ export function App() {
           <Route path="/" element={<ProductsPage />} />
           <Route path="/members" element={<MembersPage />} />
           <Route path="/password" element={<PasswordPage />} />
+          <Route path="/account" element={<AccountPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

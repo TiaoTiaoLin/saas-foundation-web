@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { api, ApiRequestError, errorMessage, violation } from '../api/http'
 import type { TokenResponse } from '../api/types'
 import { setSession } from '../auth/session'
@@ -9,6 +9,10 @@ import { emailError, loginPasswordError, tenantIdError } from '../validation'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const notice = typeof location.state === 'object' && location.state && 'notice' in location.state
+    ? String((location.state as { notice?: unknown }).notice ?? '')
+    : ''
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [tenantId, setTenantId] = useState('')
@@ -71,6 +75,7 @@ export function LoginPage() {
       <form className="panel" onSubmit={(event) => void onSubmit(event)} noValidate>
         <h2>Sign in</h2>
         <p className="lede">Use the owner account created for your organization.</p>
+        {notice ? <p className="banner" role="status">{notice}</p> : null}
         {formError ? <p className="banner error" role="alert">{formError}</p> : null}
         <TextField
           label="Email"
