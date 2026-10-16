@@ -46,6 +46,7 @@ export function PasswordPage() {
         refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
         tenantId: tokens.tenantId,
         email: session.email,
+        organizationName: tokens.organizationName || session.organizationName,
       })
       setCurrentPassword('')
       setNewPassword('')

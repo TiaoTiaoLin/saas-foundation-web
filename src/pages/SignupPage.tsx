@@ -55,6 +55,7 @@ export function SignupPage() {
         refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
         tenantId: tokens.tenantId,
         email: adminEmail.trim(),
+        organizationName: tokens.organizationName || registered.organizationName,
       })
       navigate('/', {
         replace: true,

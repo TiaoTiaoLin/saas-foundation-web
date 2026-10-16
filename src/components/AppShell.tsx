@@ -61,7 +61,7 @@ export function AppShell() {
         <NavLink to="/account">Account</NavLink>
       </nav>
       <div className="tenant-strip">
-        <span>Tenant</span>
+        <span className="org-name">{session.organizationName ?? 'Tenant'}</span>
         <code>{session.tenantId}</code>
         <button type="button" className="text-button" onClick={() => void copyTenant()}>
           {copied ? 'Copied' : 'Copy'}

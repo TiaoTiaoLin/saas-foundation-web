@@ -114,7 +114,7 @@ export function MembersPage() {
           <h1>Members</h1>
           <p>
             {owner
-              ? 'Invite an account that already exists, then set its role. This tenant must keep one owner.'
+              ? 'Invite an account that already exists. They join after they accept the email. This tenant must keep one owner.'
               : 'You can view members. Only an owner can invite, change a role, or remove someone.'}
           </p>
         </div>
@@ -131,7 +131,7 @@ export function MembersPage() {
       {owner ? (
         <form className="create-card" onSubmit={(event) => void onInvite(event)} noValidate>
           <h2>Invite member</h2>
-          <p className="hint">The person must already have an account. Creating an organization is separate.</p>
+          <p className="hint">The person must already have an account. They are not a member until they accept.</p>
           <div className="create-grid">
             <TextField
               label="Email"
@@ -255,10 +255,12 @@ export function MembersPage() {
 }
 
 function inviteNotice(invited: InviteMemberResponse): string {
-  const added = `${invited.email} is now ${formatRole(invited.role)}.`
-  if (invited.emailAccepted) return added
+  const role = formatRole(invited.role)
+  if (invited.emailAccepted) {
+    return `Invitation sent to ${invited.email}. They join as ${role} after they accept.`
+  }
   const detail = invited.emailDetail ? `: ${invited.emailDetail}` : ''
-  return `${added} The invite email was not sent${detail}`
+  return `Invitation for ${invited.email} was saved, but the email was not sent${detail}. They can join as ${role} only after they accept a link.`
 }
 
 function formatRole(role: string): string {

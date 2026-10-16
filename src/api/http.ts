@@ -1,17 +1,25 @@
 import { getSession, setSession, type Session } from '../auth/session'
-import type { ApiErrorBody, FieldViolation, TokenResponse } from './types'
+import type { ApiErrorBody, FieldViolation, LoginOrganization, TokenResponse } from './types'
 
 export class ApiRequestError extends Error {
   readonly status: number
   readonly violations: FieldViolation[]
+  readonly organizations: LoginOrganization[]
   readonly retryAfterSeconds?: number
 
-  constructor(status: number, message: string, violations: FieldViolation[] = [], retryAfterSeconds?: number) {
+  constructor(
+    status: number,
+    message: string,
+    violations: FieldViolation[] = [],
+    retryAfterSeconds?: number,
+    organizations: LoginOrganization[] = [],
+  ) {
     super(message)
     this.name = 'ApiRequestError'
     this.status = status
     this.violations = violations
     this.retryAfterSeconds = retryAfterSeconds
+    this.organizations = organizations
   }
 }
 
@@ -73,6 +81,7 @@ async function performRefresh(): Promise<Session | null> {
       refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
       tenantId: tokens.tenantId,
       email: current.email,
+      organizationName: tokens.organizationName || current.organizationName,
     }
     setSession(next)
     return next
@@ -144,6 +153,7 @@ async function parse<T>(response: Response): Promise<T> {
       message,
       body?.violations ?? [],
       Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
+      body?.organizations ?? [],
     )
   }
 

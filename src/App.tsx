@@ -1,8 +1,9 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { AuthProvider, useSession } from './auth/AuthProvider'
 import { AppShell } from './components/AppShell'
 import { AccountPage } from './pages/AccountPage'
+import { AcceptInvitePage } from './pages/AcceptInvitePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LoginPage } from './pages/LoginPage'
 import { MembersPage } from './pages/MembersPage'
@@ -13,7 +14,8 @@ import { SignupPage } from './pages/SignupPage'
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const session = useSession()
-  if (!session) return <Navigate to="/login" replace />
+  const location = useLocation()
+  if (!session) return <Navigate to="/login" replace state={{ from: location }} />
   return children
 }
 
@@ -31,6 +33,7 @@ export function App() {
         <Route path="/signup" element={<GuestOnly><SignupPage /></GuestOnly>} />
         <Route path="/forgot-password" element={<GuestOnly><ForgotPasswordPage /></GuestOnly>} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/invites/accept" element={<RequireAuth><AcceptInvitePage /></RequireAuth>} />
         <Route
           element={(
             <RequireAuth>

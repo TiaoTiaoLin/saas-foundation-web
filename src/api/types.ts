@@ -5,6 +5,7 @@ export type TokenResponse = {
   refreshToken: string
   refreshTokenExpiresAt: string
   tenantId: string
+  organizationName: string
 }
 
 export type RegisterTenantResponse = {
@@ -29,6 +30,17 @@ export type InviteMemberResponse = {
   emailDetail?: string
 }
 
+export type MembershipInvitePreview = {
+  organizationName: string
+  role: MembershipRole
+}
+
+export type AcceptMembershipInviteResponse = {
+  tenantId: string
+  organizationName: string
+  role: MembershipRole
+}
+
 export type Product = {
   id: string
   tenantId: string
@@ -51,10 +63,17 @@ export type FieldViolation = {
   message: string
 }
 
+export type LoginOrganization = {
+  tenantId: string
+  name: string
+  role: MembershipRole
+}
+
 export type ApiErrorBody = {
   status?: number
   error?: string
   message?: string
   path?: string
   violations?: FieldViolation[]
+  organizations?: LoginOrganization[]
 }

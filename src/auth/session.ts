@@ -5,6 +5,7 @@ export type Session = {
   refreshTokenExpiresAt: string
   tenantId: string
   email: string
+  organizationName?: string
 }
 
 const STORAGE_KEY = 'saas-foundation.session'
