@@ -10,6 +10,7 @@ import { emailError, requiredText, signupPasswordError } from '../validation'
 export function SignupPage() {
   const navigate = useNavigate()
   const [organizationName, setOrganizationName] = useState('')
+  const [adminName, setAdminName] = useState('')
   const [adminEmail, setAdminEmail] = useState('')
   const [adminPassword, setAdminPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -20,9 +21,11 @@ export function SignupPage() {
     event.preventDefault()
     const nextErrors: Record<string, string> = {}
     const nameProblem = requiredText(organizationName, 'Organization name', 128)
+    const adminNameProblem = requiredText(adminName, 'Name', 80)
     const emailProblem = emailError(adminEmail)
     const passwordProblem = signupPasswordError(adminPassword)
     if (nameProblem) nextErrors.organizationName = nameProblem
+    if (adminNameProblem) nextErrors.adminName = adminNameProblem
     if (emailProblem) nextErrors.adminEmail = emailProblem
     if (passwordProblem) nextErrors.adminPassword = passwordProblem
     setFieldErrors(nextErrors)
@@ -36,6 +39,7 @@ export function SignupPage() {
         auth: false,
         body: JSON.stringify({
           organizationName: organizationName.trim(),
+          adminName: adminName.trim(),
           adminEmail: adminEmail.trim(),
           adminPassword,
         }),
@@ -55,6 +59,7 @@ export function SignupPage() {
         refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
         tenantId: tokens.tenantId,
         email: adminEmail.trim(),
+        name: adminName.trim(),
         organizationName: tokens.organizationName || registered.organizationName,
       })
       navigate('/', {
@@ -66,6 +71,7 @@ export function SignupPage() {
     } catch (error) {
       setFieldErrors({
         organizationName: violation(error, 'organizationName') ?? '',
+        adminName: violation(error, 'adminName') ?? '',
         adminEmail: violation(error, 'adminEmail') ?? '',
         adminPassword: violation(error, 'adminPassword') ?? '',
       })
@@ -89,6 +95,15 @@ export function SignupPage() {
           onChange={setOrganizationName}
           error={fieldErrors.organizationName || undefined}
           maxLength={128}
+        />
+        <TextField
+          label="Your name"
+          name="adminName"
+          autoComplete="name"
+          value={adminName}
+          onChange={setAdminName}
+          error={fieldErrors.adminName || undefined}
+          maxLength={80}
         />
         <TextField
           label="Owner email"

@@ -177,6 +177,7 @@ export function MembersPage() {
           <table>
             <thead>
               <tr>
+                <th scope="col">Name</th>
                 <th scope="col">Email</th>
                 <th scope="col">Role</th>
                 {owner ? <th scope="col"><span className="sr-only">Actions</span></th> : null}
@@ -189,9 +190,10 @@ export function MembersPage() {
                 return (
                   <tr key={member.userId}>
                     <th scope="row">
-                      {member.email}
+                      {member.name || '—'}
                       {member.userId === selfId ? <span className="muted"> · You</span> : null}
                     </th>
+                    <td>{member.email}</td>
                     <td>
                       {owner ? (
                         <select

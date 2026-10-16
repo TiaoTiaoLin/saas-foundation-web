@@ -221,11 +221,13 @@ h1, h2, p { margin: 0; }
   text-transform: uppercase;
 }
 
-.email {
+.who-name, .email {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.who-name { font-weight: 650; max-width: 16rem; }
 
 .topbar .button.secondary {
   color: #f6f3ec;

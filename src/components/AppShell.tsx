@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { api, errorMessage, switchOrganization } from '../api/http'
-import type { LoginOrganization, MembershipRole } from '../api/types'
+import type { LoginOrganization, MembershipRole, Profile } from '../api/types'
 import { useSession } from '../auth/AuthProvider'
-import { canViewMembers, readAccessClaims, setSession } from '../auth/session'
+import { canViewMembers, getSession, readAccessClaims, setSession } from '../auth/session'
 
 export function AppShell() {
   const session = useSession()
@@ -29,6 +29,24 @@ export function AppShell() {
       cancelled = true
     }
   }, [session?.tenantId])
+
+  useEffect(() => {
+    if (!session) return
+    let cancelled = false
+    api<Profile>('/api/v1/auth/profile')
+      .then((profile) => {
+        if (cancelled) return
+        const current = getSession()
+        if (!current || (current.name ?? '') === profile.name) return
+        setSession({ ...current, name: profile.name })
+      })
+      .catch(() => {
+        // The header keeps the email until the name can be loaded.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [session?.email])
 
   if (!session) return null
 
@@ -96,6 +114,7 @@ export function AppShell() {
         <p className="mark">Foundation</p>
         <div className="who">
           <span className="role">{formatRole(role)}</span>
+          {session.name ? <span className="who-name">{session.name}</span> : null}
           <span className="email">{session.email}</span>
           <button type="button" className="button secondary" onClick={() => void signOut()} disabled={signingOut}>
             {signingOut ? 'Signing out…' : 'Sign out'}

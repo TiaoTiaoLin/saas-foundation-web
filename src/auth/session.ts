@@ -5,6 +5,7 @@ export type Session = {
   refreshTokenExpiresAt: string
   tenantId: string
   email: string
+  name?: string
   organizationName?: string
 }
 

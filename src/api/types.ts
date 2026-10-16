@@ -19,7 +19,13 @@ export type MembershipRole = 'OWNER' | 'ADMIN' | 'MEMBER'
 export type Member = {
   userId: string
   email: string
+  name: string
   role: MembershipRole
+}
+
+export type Profile = {
+  email: string
+  name: string
 }
 
 export type InviteMemberResponse = {
