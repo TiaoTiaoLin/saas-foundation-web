@@ -76,8 +76,8 @@ export function AcceptInvitePage() {
         {accepted ? (
           <>
             <p className="lede" role="status">
-              You joined {accepted.organizationName} as {formatRole(accepted.role)}. Sign out and sign in again,
-              then choose {accepted.organizationName}.
+              You joined {accepted.organizationName} as {formatRole(accepted.role)}. Choose {accepted.organizationName} from
+              the organization menu to open it.
             </p>
           </>
         ) : null}

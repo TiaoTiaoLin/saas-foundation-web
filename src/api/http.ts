@@ -94,6 +94,31 @@ async function performRefresh(): Promise<Session | null> {
   }
 }
 
+/** Starts a session for another organization this account belongs to. */
+export async function switchOrganization(tenantId: string): Promise<TokenResponse> {
+  if (refreshInFlight) {
+    await refreshInFlight.catch(() => null)
+  }
+  const current = getSession()
+  if (!current) throw new ApiRequestError(401, 'Sign in again to continue.')
+  const expiresAt = Date.parse(current.accessTokenExpiresAt)
+  let session = current
+  if (!Number.isFinite(expiresAt) || expiresAt - Date.now() < 30_000) {
+    const refreshed = await refreshSession()
+    if (!refreshed) throw new ApiRequestError(401, 'Sign in again to continue.')
+    session = refreshed
+  }
+  try {
+    return await request<TokenResponse>('/api/v1/auth/organizations/switch', {
+      method: 'POST',
+      body: JSON.stringify({ tenantId, refreshToken: session.refreshToken }),
+    })
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 401) setSession(null)
+    throw error
+  }
+}
+
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const response = await send(path, options)
   if (response.status === 401 && options.auth !== false && !options.retried) {
