@@ -26,6 +26,7 @@ function GuestOnly({ children }: { children: ReactNode }) {
 }
 
 export function App() {
+  // test
   return (
     <AuthProvider>
       <Routes>
