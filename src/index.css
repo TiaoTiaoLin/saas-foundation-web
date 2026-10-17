@@ -229,6 +229,64 @@ h1, h2, p { margin: 0; }
 
 .who-name { font-weight: 650; max-width: 16rem; }
 
+.avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: none;
+  background: #d9d0c2;
+  color: var(--ink);
+}
+
+.avatar.placeholder {
+  display: inline-grid;
+  place-items: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.topbar .avatar {
+  background: rgba(246, 243, 236, 0.18);
+  color: #f6f3ec;
+}
+
+.logo {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 6px;
+  object-fit: cover;
+  flex: none;
+  background: #fff;
+}
+
+.member-name {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.photo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.photo-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+label.button, label.text-button {
+  display: inline-flex;
+  align-items: center;
+  font: inherit;
+}
+
+.file-button input { display: none; }
+
 .topbar .button.secondary {
   color: #f6f3ec;
   border-color: rgba(246, 243, 236, 0.35);

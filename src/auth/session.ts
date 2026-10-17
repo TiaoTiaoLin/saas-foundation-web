@@ -48,6 +48,24 @@ export function subscribe(listener: () => void): () => void {
   return () => listeners.delete(listener)
 }
 
+let imageVersion = 0
+const imageListeners = new Set<() => void>()
+
+/** Asks the header and tenant strip to load fresh signed image URLs. */
+export function bumpImages(): void {
+  imageVersion += 1
+  imageListeners.forEach((listener) => listener())
+}
+
+export function subscribeImages(listener: () => void): () => void {
+  imageListeners.add(listener)
+  return () => imageListeners.delete(listener)
+}
+
+export function getImageVersion(): number {
+  return imageVersion
+}
+
 export type AccessClaims = {
   sub?: string
   roles?: string[]

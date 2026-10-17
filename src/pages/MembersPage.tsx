@@ -4,6 +4,7 @@ import { api, errorMessage, violation } from '../api/http'
 import type { InviteMemberResponse, Member, MembershipRole } from '../api/types'
 import { useSession } from '../auth/AuthProvider'
 import { currentUserId, isOwner, setSession } from '../auth/session'
+import { Avatar } from '../components/Avatar'
 import { TextField } from '../components/TextField'
 import { emailError } from '../validation'
 
@@ -189,9 +190,12 @@ export function MembersPage() {
                 const confirming = confirmRemoveId === member.userId
                 return (
                   <tr key={member.userId}>
-                    <th scope="row">
-                      {member.name || '—'}
-                      {member.userId === selfId ? <span className="muted"> · You</span> : null}
+                    <th scope="row" className="member-name">
+                      <Avatar url={member.avatarUrl} label={member.name || member.email} />
+                      <span>
+                        {member.name || '—'}
+                        {member.userId === selfId ? <span className="muted"> · You</span> : null}
+                      </span>
                     </th>
                     <td>{member.email}</td>
                     <td>

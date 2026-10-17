@@ -21,11 +21,18 @@ export type Member = {
   email: string
   name: string
   role: MembershipRole
+  avatarUrl?: string | null
 }
 
 export type Profile = {
   email: string
   name: string
+  avatarUrl?: string | null
+}
+
+export type Organization = {
+  name: string
+  logoUrl?: string | null
 }
 
 export type InviteMemberResponse = {

@@ -32,6 +32,14 @@ function apiBase(): string {
   return (import.meta.env.VITE_API_BASE_URL ?? '').replace(/\/$/, '')
 }
 
+/** Signed image URLs from local storage are relative so the dev proxy can load them. */
+export function mediaSrc(url: string | null | undefined): string | undefined {
+  if (!url) return undefined
+  if (/^https?:\/\//i.test(url)) return url
+  const path = url.startsWith('/') ? url : `/${url}`
+  return `${apiBase()}${path}`
+}
+
 export function violation(error: unknown, field: string): string | undefined {
   if (!(error instanceof ApiRequestError)) return undefined
   return error.violations.find((item) => item.field === field)?.message
@@ -119,6 +127,17 @@ export async function switchOrganization(tenantId: string): Promise<TokenRespons
   }
 }
 
+export const MAX_IMAGE_BYTES = 2 * 1024 * 1024
+
+export async function putImage<T>(path: string, file: File): Promise<T> {
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new ApiRequestError(400, 'Image must be at most 2 MB')
+  }
+  const body = new FormData()
+  body.append('file', file)
+  return api<T>(path, { method: 'PUT', body })
+}
+
 export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
   const response = await send(path, options)
   if (response.status === 401 && options.auth !== false && !options.retried) {
@@ -134,7 +153,7 @@ async function request<T>(path: string, options: ApiOptions = {}): Promise<T> {
 
 async function send(path: string, options: ApiOptions): Promise<Response> {
   const headers = new Headers(options.headers)
-  if (options.body != null && !headers.has('Content-Type')) {
+  if (options.body != null && !(options.body instanceof FormData) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
   if (options.auth !== false) {
@@ -149,7 +168,7 @@ async function send(path: string, options: ApiOptions): Promise<Response> {
     return await fetch(`${apiBase()}${path}`, {
       ...options,
       headers,
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(options.body instanceof FormData ? 30_000 : 10_000),
     })
   } catch (error) {
     if (error instanceof TypeError || (error instanceof DOMException && error.name === 'TimeoutError')) {

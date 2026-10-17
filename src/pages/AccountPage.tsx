@@ -1,9 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { api, ApiRequestError, errorMessage, violation } from '../api/http'
+import { api, ApiRequestError, errorMessage, putImage, violation } from '../api/http'
 import type { Profile } from '../api/types'
 import { useSession } from '../auth/AuthProvider'
-import { setSession } from '../auth/session'
+import { bumpImages, setSession } from '../auth/session'
+import { Avatar } from '../components/Avatar'
 import { TextField } from '../components/TextField'
 import { requiredText } from '../validation'
 
@@ -11,6 +12,9 @@ export function AccountPage() {
   const session = useSession()
   const navigate = useNavigate()
   const [name, setName] = useState(session?.name ?? '')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
+  const [avatarPending, setAvatarPending] = useState(false)
   const [nameError, setNameError] = useState<string | undefined>()
   const [nameNotice, setNameNotice] = useState<string | null>(null)
   const [nameFormError, setNameFormError] = useState<string | null>(null)
@@ -25,7 +29,10 @@ export function AccountPage() {
     let cancelled = false
     api<Profile>('/api/v1/auth/profile')
       .then((profile) => {
-        if (!cancelled) setName(profile.name)
+        if (!cancelled) {
+          setName(profile.name)
+          setAvatarUrl(profile.avatarUrl ?? null)
+        }
       })
       .catch((error: unknown) => {
         if (!cancelled) setNameFormError(errorMessage(error))
@@ -50,6 +57,7 @@ export function AccountPage() {
         body: JSON.stringify({ name: name.trim() }),
       })
       setName(profile.name)
+      setAvatarUrl(profile.avatarUrl ?? null)
       setSession({ ...session, name: profile.name })
       setNameNotice('Name saved.')
     } catch (error) {
@@ -58,6 +66,36 @@ export function AccountPage() {
       if (!field) setNameFormError(errorMessage(error))
     } finally {
       setSavingName(false)
+    }
+  }
+
+  async function onAvatar(file: File | undefined) {
+    if (!file) return
+    setAvatarError(null)
+    setNameNotice(null)
+    setAvatarPending(true)
+    try {
+      const profile = await putImage<Profile>('/api/v1/auth/profile/avatar', file)
+      setAvatarUrl(profile.avatarUrl ?? null)
+      bumpImages()
+    } catch (error) {
+      setAvatarError(errorMessage(error))
+    } finally {
+      setAvatarPending(false)
+    }
+  }
+
+  async function onClearAvatar() {
+    setAvatarError(null)
+    setAvatarPending(true)
+    try {
+      const profile = await api<Profile>('/api/v1/auth/profile/avatar', { method: 'DELETE' })
+      setAvatarUrl(profile.avatarUrl ?? null)
+      bumpImages()
+    } catch (error) {
+      setAvatarError(errorMessage(error))
+    } finally {
+      setAvatarPending(false)
     }
   }
 
@@ -106,6 +144,30 @@ export function AccountPage() {
       <form className="create-card password-card" onSubmit={(event) => void onSaveName(event)} noValidate>
         {nameNotice ? <p className="banner" role="status">{nameNotice}</p> : null}
         {nameFormError ? <p className="banner error" role="alert">{nameFormError}</p> : null}
+        <div className="photo-row">
+          <Avatar url={avatarUrl} label={name || session?.email || '?'} />
+          <div className="photo-actions">
+            <label className="button secondary file-button">
+              {avatarPending ? 'Saving…' : 'Upload photo'}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                disabled={avatarPending}
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  event.target.value = ''
+                  void onAvatar(file)
+                }}
+              />
+            </label>
+            {avatarUrl ? (
+              <button type="button" className="text-button" onClick={() => void onClearAvatar()} disabled={avatarPending}>
+                Remove photo
+              </button>
+            ) : null}
+          </div>
+        </div>
+        {avatarError ? <p className="field-error" role="alert">{avatarError}</p> : null}
         <TextField
           label="Name"
           name="name"
