@@ -35,6 +35,20 @@ export type Organization = {
   logoUrl?: string | null
 }
 
+export type SubscriptionStatus = 'NONE' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'INCOMPLETE'
+
+export type Billing = {
+  subscriptionStatus: SubscriptionStatus
+  productAccess: boolean
+  configured: boolean
+  canSubscribe: boolean
+  canManage: boolean
+}
+
+export type BillingLink = {
+  url: string
+}
+
 export type InviteMemberResponse = {
   userId: string
   email: string

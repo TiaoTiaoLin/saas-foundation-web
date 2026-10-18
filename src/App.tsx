@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AuthProvider, useSession } from './auth/AuthProvider'
 import { AppShell } from './components/AppShell'
 import { AccountPage } from './pages/AccountPage'
+import { BillingPage } from './pages/BillingPage'
 import { AcceptInvitePage } from './pages/AcceptInvitePage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { LoginPage } from './pages/LoginPage'
@@ -45,6 +46,7 @@ export function App() {
           <Route path="/members" element={<MembersPage />} />
           <Route path="/password" element={<PasswordPage />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/billing" element={<BillingPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
