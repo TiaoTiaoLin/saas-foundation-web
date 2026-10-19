@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api, errorMessage } from '../api/http'
-import type { Billing, BillingLink, SubscriptionStatus } from '../api/types'
+import type { Billing, BillingLink, Plan, SubscriptionStatus } from '../api/types'
 
 export function BillingPage() {
   const [params] = useSearchParams()
@@ -42,7 +42,7 @@ export function BillingPage() {
       <header className="page-head">
         <div>
           <h1>Billing</h1>
-          <p>The subscription belongs to this organization. Card details stay with Stripe.</p>
+          <p>Every organization starts on Free. Pro adds the audit log. Card details stay with Stripe.</p>
         </div>
       </header>
       {checkout === 'success' ? (
@@ -56,15 +56,20 @@ export function BillingPage() {
       {!billing && !loadError ? <p className="muted">Loading billing…</p> : null}
       {billing ? (
         <div className="create-card password-card">
-          <p>Status: {subscriptionLabel(billing.subscriptionStatus)}</p>
+          <p>Plan: {planLabel(billing.plan)}</p>
+          <p>Subscription: {subscriptionLabel(billing.subscriptionStatus)}</p>
+          <p>
+            Free includes products, members, and organization settings.
+            Pro includes everything in Free, plus the audit log.
+          </p>
           {!billing.configured ? <p className="hint">Billing is not configured on this server.</p> : null}
-          {!billing.productAccess ? (
-            <p>Product pages stay closed until the subscription is active.</p>
+          {!billing.auditAccess && billing.plan === 'PRO' ? (
+            <p>The audit log stays closed until the Pro subscription is active.</p>
           ) : null}
           <div className="photo-actions">
             {billing.canSubscribe ? (
               <button type="button" className="button" disabled={pending !== null} onClick={() => void open('/api/v1/billing/checkout', 'checkout')}>
-                {pending === 'checkout' ? 'Opening Stripe…' : billing.subscriptionStatus === 'NONE' ? 'Subscribe' : 'Subscribe again'}
+                {pending === 'checkout' ? 'Opening Stripe…' : 'Upgrade to Pro'}
               </button>
             ) : null}
             {billing.canManage ? (
@@ -80,6 +85,10 @@ export function BillingPage() {
       ) : null}
     </section>
   )
+}
+
+function planLabel(plan: Plan): string {
+  return plan === 'PRO' ? 'Pro' : 'Free'
 }
 
 function subscriptionLabel(status: SubscriptionStatus): string {

@@ -1,7 +1,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
-import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { api, errorMessage, putImage, switchOrganization } from '../api/http'
-import type { Billing, LoginOrganization, MembershipRole, Organization, Profile } from '../api/types'
+import type { LoginOrganization, MembershipRole, Organization, Profile } from '../api/types'
 import { useSession } from '../auth/AuthProvider'
 import { bumpImages, canViewMembers, getImageVersion, getSession, isOwner, readAccessClaims, setSession, subscribeImages } from '../auth/session'
 import { Avatar, Logo } from './Avatar'
@@ -19,7 +19,6 @@ export function AppShell() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const [logoError, setLogoError] = useState<string | null>(null)
   const [logoPending, setLogoPending] = useState(false)
-  const [billing, setBilling] = useState<Billing | null>(null)
   const imageVersion = useSyncExternalStore(subscribeImages, getImageVersion)
 
   useEffect(() => {
@@ -51,21 +50,6 @@ export function AppShell() {
       cancelled = true
     }
   }, [session?.tenantId, imageVersion])
-
-  useEffect(() => {
-    if (!session) return
-    let cancelled = false
-    api<Billing>('/api/v1/billing')
-      .then((next) => {
-        if (!cancelled) setBilling(next)
-      })
-      .catch(() => {
-        if (!cancelled) setBilling(null)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [session?.tenantId])
 
   useEffect(() => {
     if (!session) return
@@ -194,6 +178,7 @@ export function AppShell() {
         <NavLink to="/" end>Products</NavLink>
         {showMembers ? <NavLink to="/members">Members</NavLink> : null}
         <NavLink to="/billing">Billing</NavLink>
+        {owner ? <NavLink to="/audit">Audit log</NavLink> : null}
         <NavLink to="/password">Password</NavLink>
         <NavLink to="/account">Account</NavLink>
       </nav>
@@ -250,12 +235,6 @@ export function AppShell() {
       </div>
       <main className="content">
         <div key={session.tenantId}>
-          {billing && !billing.productAccess ? (
-            <p className="banner">
-              This organization's subscription is not active.{' '}
-              <Link to="/billing">Open billing</Link>
-            </p>
-          ) : null}
           <Outlet />
         </div>
       </main>

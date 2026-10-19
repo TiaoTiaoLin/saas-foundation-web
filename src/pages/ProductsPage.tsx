@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { api, errorMessage, violation } from '../api/http'
-import type { Billing, Product, ProductPage } from '../api/types'
+import type { Product, ProductPage } from '../api/types'
 import { useSession } from '../auth/AuthProvider'
 import { canManageProducts } from '../auth/session'
 import { TextField } from '../components/TextField'
@@ -19,7 +19,6 @@ export function ProductsPage() {
   const session = useSession()
   const canManage = session ? canManageProducts(session.accessToken) : false
   const arrival = (location.state ?? null) as HomeState | null
-  const [subscribed, setSubscribed] = useState<boolean | null>(null)
   const [products, setProducts] = useState<Product[]>([])
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
@@ -73,28 +72,13 @@ export function ProductsPage() {
 
   useEffect(() => {
     if (!session) return
-    let cancelled = false
-    api<Billing>('/api/v1/billing')
-      .then((billing) => {
-        if (!cancelled) setSubscribed(billing.productAccess)
-      })
-      .catch(() => {
-        if (!cancelled) setSubscribed(true)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [session?.tenantId])
-
-  useEffect(() => {
-    if (subscribed !== true) return
     setLoading(true)
     const delay = query.trim() ? 300 : 0
     const handle = window.setTimeout(() => {
       void load(query, 0)
     }, delay)
     return () => window.clearTimeout(handle)
-  }, [query, subscribed])
+  }, [query, session?.tenantId])
 
   async function onCreate(event: FormEvent) {
     event.preventDefault()
@@ -153,11 +137,9 @@ export function ProductsPage() {
         <div>
           <h1>Products</h1>
           <p>
-            {subscribed === false
-              ? 'Products stay closed until this organization has an active subscription.'
-              : canManage
-                ? 'All products for this tenant, including ones that are turned off. Members only see active products.'
-                : 'Active products for this tenant. You can view them.'}
+            {canManage
+              ? 'All products for this tenant, including ones that are turned off. Members only see active products.'
+              : 'Active products for this tenant. You can view them.'}
           </p>
         </div>
       </header>
@@ -169,17 +151,7 @@ export function ProductsPage() {
         </div>
       ) : null}
 
-      {subscribed === false ? (
-        <div className="empty">
-          <h2>Subscribe to use products</h2>
-          <p>
-            This organization can sign in and manage billing. Product pages open after the subscription is active.{' '}
-            <Link to="/billing">Open billing</Link>
-          </p>
-        </div>
-      ) : null}
-
-      {subscribed && canManage ? (
+      {canManage ? (
         <form className="create-card" onSubmit={(event) => void onCreate(event)} noValidate>
           <h2>New product</h2>
           {createError ? <p className="banner error" role="alert">{createError}</p> : null}
@@ -208,7 +180,6 @@ export function ProductsPage() {
         </form>
       ) : null}
 
-      {subscribed ? (
       <form
         className="search-row"
         role="search"
@@ -229,12 +200,11 @@ export function ProductsPage() {
             : 'Name or SKU.'}
         />
       </form>
-      ) : null}
 
-      {subscribed === null || (subscribed && loading) ? <p className="muted">Loading products…</p> : null}
-      {subscribed && loadError ? <p className="banner error" role="alert">{loadError}</p> : null}
+      {loading ? <p className="muted">Loading products…</p> : null}
+      {loadError ? <p className="banner error" role="alert">{loadError}</p> : null}
 
-      {subscribed && !loading && !loadError && products.length === 0 ? (
+      {!loading && !loadError && products.length === 0 ? (
         <div className="empty">
           {query.trim() ? (
             <>
@@ -254,7 +224,7 @@ export function ProductsPage() {
         </div>
       ) : null}
 
-      {subscribed && products.length > 0 ? (
+      {products.length > 0 ? (
         <div className="table-wrap">
           <table>
             <thead>
@@ -287,7 +257,7 @@ export function ProductsPage() {
         </div>
       ) : null}
 
-      {subscribed && !loadError && (!loading || total > 0) ? (
+      {!loadError && (!loading || total > 0) ? (
         <nav className="pager" aria-label="Products">
           <button
             type="button"

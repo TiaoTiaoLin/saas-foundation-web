@@ -37,9 +37,13 @@ export type Organization = {
 
 export type SubscriptionStatus = 'NONE' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED' | 'INCOMPLETE'
 
+export type Plan = 'FREE' | 'PRO'
+
 export type Billing = {
+  plan: Plan
   subscriptionStatus: SubscriptionStatus
   productAccess: boolean
+  auditAccess: boolean
   configured: boolean
   canSubscribe: boolean
   canManage: boolean
@@ -47,6 +51,23 @@ export type Billing = {
 
 export type BillingLink = {
   url: string
+}
+
+export type AuditEvent = {
+  id: string
+  action: string
+  targetType: string
+  targetId?: string | null
+  actorUserId?: string | null
+  metadata: Record<string, string>
+  createdAt: string
+}
+
+export type AuditPage = {
+  items: AuditEvent[]
+  page: number
+  size: number
+  total: number
 }
 
 export type InviteMemberResponse = {
