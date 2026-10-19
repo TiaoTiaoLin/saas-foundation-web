@@ -55,13 +55,20 @@ export function BillingPage() {
       {actionError ? <p className="banner error" role="alert">{actionError}</p> : null}
       {!billing && !loadError ? <p className="muted">Loading billing…</p> : null}
       {billing ? (
-        <div className="create-card password-card">
-          <p>Plan: {planLabel(billing.plan)}</p>
-          <p>Subscription: {subscriptionLabel(billing.subscriptionStatus)}</p>
-          <p>
-            Free includes products, members, and organization settings.
-            Pro includes everything in Free, plus the audit log.
-          </p>
+        <div className="create-card plan-card">
+          <div className="plan-top">
+            <div>
+              <p className="eyebrow">Current plan</p>
+              <h2>{planLabel(billing.plan)}</h2>
+            </div>
+            <span className={billing.subscriptionStatus === 'ACTIVE' || billing.plan === 'FREE' ? 'badge ok' : 'badge'}>
+              {subscriptionLabel(billing.subscriptionStatus)}
+            </span>
+          </div>
+          <ul className="plan-points">
+            <li>Products, members, and organization settings</li>
+            <li>{billing.plan === 'PRO' ? 'Audit log included' : 'Audit log unlocks on Pro'}</li>
+          </ul>
           {!billing.configured ? <p className="hint">Billing is not configured on this server.</p> : null}
           {!billing.auditAccess && billing.plan === 'PRO' ? (
             <p>The audit log stays closed until the Pro subscription is active.</p>

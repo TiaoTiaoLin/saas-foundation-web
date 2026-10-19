@@ -190,11 +190,13 @@ export function MembersPage() {
                 const confirming = confirmRemoveId === member.userId
                 return (
                   <tr key={member.userId}>
-                    <th scope="row" className="member-name">
-                      <Avatar url={member.avatarUrl} label={member.name || member.email} />
-                      <span>
-                        {member.name || '—'}
-                        {member.userId === selfId ? <span className="muted"> · You</span> : null}
+                    <th scope="row">
+                      <span className="member-name">
+                        <Avatar url={member.avatarUrl} label={member.name || member.email} />
+                        <span>
+                          {member.name || '—'}
+                          {member.userId === selfId ? <span className="muted"> · You</span> : null}
+                        </span>
                       </span>
                     </th>
                     <td>{member.email}</td>

@@ -242,7 +242,13 @@ export function ProductsPage() {
                   <th scope="row">{product.name}</th>
                   <td className="sku">{product.sku}</td>
                   <td>{formatWhen(product.updatedAt)}</td>
-                  {canManage ? <td>{product.active ? 'Active' : 'Inactive'}</td> : null}
+                  {canManage ? (
+                    <td>
+                      <span className={product.active ? 'badge ok' : 'badge'}>
+                        {product.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                  ) : null}
                   {canManage ? (
                     <td className="row-action">
                       <button type="button" className="button secondary" onClick={() => setEditing(product)}>
