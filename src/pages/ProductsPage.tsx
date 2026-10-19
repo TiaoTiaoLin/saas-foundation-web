@@ -257,34 +257,38 @@ export function ProductsPage() {
         </div>
       ) : null}
 
-      {!loadError && (!loading || total > 0) ? (
+      {!loadError && total > 0 ? (
         <nav className="pager" aria-label="Products">
-          <button
-            type="button"
-            className="button secondary"
-            disabled={page === 0 || loading || total === 0}
-            onClick={() => void load(query, page - 1)}
-          >
-            Previous
-          </button>
-          <form onSubmit={goToPage}>
-            <label htmlFor="product-page">Page</label>
-            <input
-              id="product-page"
-              name="page"
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={lastPageNumber}
-              value={pageDraft}
-              disabled={loading || total === 0}
-              onChange={(event) => setPageDraft(event.target.value)}
-            />
-            <span>of {lastPageNumber}</span>
-            <button type="submit" className="button secondary" disabled={loading || total === 0}>
-              Go
+          {pageCount > 1 ? (
+            <button
+              type="button"
+              className="button secondary"
+              disabled={page === 0 || loading}
+              onClick={() => void load(query, page - 1)}
+            >
+              Previous
             </button>
-          </form>
+          ) : null}
+          {pageCount > 1 ? (
+            <form onSubmit={goToPage}>
+              <label htmlFor="product-page">Page</label>
+              <input
+                id="product-page"
+                name="page"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={lastPageNumber}
+                value={pageDraft}
+                disabled={loading}
+                onChange={(event) => setPageDraft(event.target.value)}
+              />
+              <span>of {lastPageNumber}</span>
+              <button type="submit" className="button secondary" disabled={loading}>
+                Go
+              </button>
+            </form>
+          ) : null}
           <form
             onSubmit={(event) => {
               event.preventDefault()
@@ -308,14 +312,16 @@ export function ProductsPage() {
           <p>
             {rangeStart}–{rangeEnd} of {total}
           </p>
-          <button
-            type="button"
-            className="button secondary"
-            disabled={page + 1 >= pageCount || loading || total === 0}
-            onClick={() => void load(query, page + 1)}
-          >
-            Next
-          </button>
+          {pageCount > 1 ? (
+            <button
+              type="button"
+              className="button secondary"
+              disabled={page + 1 >= pageCount || loading}
+              onClick={() => void load(query, page + 1)}
+            >
+              Next
+            </button>
+          ) : null}
         </nav>
       ) : null}
 

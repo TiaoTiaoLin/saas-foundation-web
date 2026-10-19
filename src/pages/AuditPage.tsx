@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { api, errorMessage } from '../api/http'
 import type { AuditEvent, AuditPage, Billing } from '../api/types'
 import { useSession } from '../auth/AuthProvider'
 import { isOwner } from '../auth/session'
 
-const PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 20
+const MAX_PAGE_SIZE = 100
 
 const ACTION_LABELS: Record<string, string> = {
   AUTH_LOGIN: 'Signed in',
@@ -29,6 +30,9 @@ export function AuditPage() {
   const [allowed, setAllowed] = useState<boolean | null>(null)
   const [page, setPage] = useState<AuditPage | null>(null)
   const [pageIndex, setPageIndex] = useState(0)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [pageDraft, setPageDraft] = useState('1')
+  const [sizeDraft, setSizeDraft] = useState(String(DEFAULT_PAGE_SIZE))
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
 
@@ -48,12 +52,16 @@ export function AuditPage() {
           setLoading(false)
           return
         }
-        const params = new URLSearchParams({ page: String(pageIndex), size: String(PAGE_SIZE) })
+        const params = new URLSearchParams({ page: String(pageIndex), size: String(pageSize) })
         return api<AuditPage>(`/api/v1/audit?${params}`)
       })
       .then((next) => {
         if (!cancelled && next) {
           setPage(next)
+          setPageIndex(next.page)
+          setPageSize(next.size)
+          setPageDraft(String(next.page + 1))
+          setSizeDraft(String(next.size))
           setLoadError(null)
         }
       })
@@ -66,9 +74,30 @@ export function AuditPage() {
     return () => {
       cancelled = true
     }
-  }, [owner, pageIndex, session?.tenantId])
+  }, [owner, pageIndex, pageSize, session?.tenantId])
 
   const pageCount = page && page.size > 0 ? Math.ceil(page.total / page.size) : 0
+  const lastPageNumber = Math.max(pageCount, 1)
+  const total = page?.total ?? 0
+  const rangeStart = total === 0 ? 0 : pageIndex * pageSize + 1
+  const rangeEnd = Math.min(total, pageIndex * pageSize + (page?.items.length ?? 0))
+
+  function goToPage(event: FormEvent) {
+    event.preventDefault()
+    const requested = Number(pageDraft)
+    if (!Number.isInteger(requested)) return
+    const clamped = Math.min(Math.max(requested, 1), lastPageNumber)
+    setPageDraft(String(clamped))
+    setPageIndex(clamped - 1)
+  }
+
+  function applyPageSize() {
+    const next = clampPageSize(Number(sizeDraft))
+    setSizeDraft(String(next))
+    if (next === pageSize) return
+    setPageIndex(0)
+    setPageSize(next)
+  }
 
   return (
     <section className="page">
@@ -118,25 +147,72 @@ export function AuditPage() {
           </table>
         </div>
       ) : null}
-      {page && pageCount > 1 ? (
-        <div className="photo-actions">
-          <button
-            type="button"
-            className="button secondary"
-            disabled={pageIndex === 0}
-            onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
+      {allowed && page && !loadError && total > 0 ? (
+        <nav className="pager" aria-label="Audit log">
+          {pageCount > 1 ? (
+            <button
+              type="button"
+              className="button secondary"
+              disabled={pageIndex === 0 || loading}
+              onClick={() => setPageIndex((current) => Math.max(0, current - 1))}
+            >
+              Previous
+            </button>
+          ) : null}
+          {pageCount > 1 ? (
+            <form onSubmit={goToPage}>
+              <label htmlFor="audit-page">Page</label>
+              <input
+                id="audit-page"
+                name="page"
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={lastPageNumber}
+                value={pageDraft}
+                disabled={loading}
+                onChange={(event) => setPageDraft(event.target.value)}
+              />
+              <span>of {lastPageNumber}</span>
+              <button type="submit" className="button secondary" disabled={loading}>
+                Go
+              </button>
+            </form>
+          ) : null}
+          <form
+            onSubmit={(event) => {
+              event.preventDefault()
+              applyPageSize()
+            }}
           >
-            Previous
-          </button>
-          <button
-            type="button"
-            className="button secondary"
-            disabled={pageIndex + 1 >= pageCount}
-            onClick={() => setPageIndex((current) => current + 1)}
-          >
-            Next
-          </button>
-        </div>
+            <label htmlFor="audit-page-size">Rows</label>
+            <input
+              id="audit-page-size"
+              name="size"
+              type="number"
+              inputMode="numeric"
+              min={1}
+              max={MAX_PAGE_SIZE}
+              value={sizeDraft}
+              disabled={loading}
+              onChange={(event) => setSizeDraft(event.target.value)}
+              onBlur={applyPageSize}
+            />
+          </form>
+          <p>
+            {rangeStart}–{rangeEnd} of {total}
+          </p>
+          {pageCount > 1 ? (
+            <button
+              type="button"
+              className="button secondary"
+              disabled={pageIndex + 1 >= pageCount || loading}
+              onClick={() => setPageIndex((current) => current + 1)}
+            >
+              Next
+            </button>
+          ) : null}
+        </nav>
       ) : null}
     </section>
   )
@@ -156,6 +232,11 @@ function detail(event: AuditEvent): string {
   }
   if (metadata.email && metadata.role) return `${metadata.email} · ${label(metadata.role)}`
   return metadata.email ?? (metadata.role ? label(metadata.role) : '')
+}
+
+function clampPageSize(size: number): number {
+  if (!Number.isInteger(size) || size < 1) return DEFAULT_PAGE_SIZE
+  return Math.min(size, MAX_PAGE_SIZE)
 }
 
 function label(value: string): string {
